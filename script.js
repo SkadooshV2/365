@@ -1,139 +1,118 @@
-// *** CONFIGURATION ***
-
-// 1) Add all years you want tabs for:
+// CONFIGURATION
 const YEARS     = [2023, 2024, 2025];
+const CAPTIONS  = { /* "YYYY-MM-DD": "Your caption" */ };
 
-// 2) Map "YYYY-MM-DD" → "Your custom caption".  
-const CAPTIONS = {
-  "2025-01-01": "New Year's sunrise over the dunes",
-  "2025-02-14": "Valentine's heart in sand",
-  // … add more as you like
-};
-
-// --- DOM refs ---
+// DOM
 const tabsContainer = document.getElementById('yearTabs');
 const gallery       = document.getElementById('gallery');
 const lightbox      = document.getElementById('lightbox');
 const lightboxImg   = document.getElementById('lightboxImg');
-const captionDate   = document.querySelector('#lightboxCaption .caption-date');
-const captionText   = document.querySelector('#lightboxCaption .caption-text');
+const captionDate   = document.querySelector('.caption-date');
+const captionText   = document.querySelector('.caption-text');
 
 let imageList   = [];
 let currentYear = YEARS[0];
 let currentIndex= 0;
 
-
-/**
- * Returns 365 or 366 depending on whether `year` is a leap year.
- */
-function daysInYear(year) {
-  const start = new Date(year, 0, 1);
-  const end   = new Date(year + 1, 0, 1);
-  return Math.round((end - start) / (1000 * 60 * 60 * 24));
+// helper: days in year
+function daysInYear(y) {
+  const start = new Date(y,0,1);
+  const end   = new Date(y+1,0,1);
+  return Math.round((end-start)/(1000*60*60*24));
 }
 
-
-// Build year‐tabs
-YEARS.forEach((year, idx) => {
+// build year tabs
+YEARS.forEach((y,i) => {
   const tab = document.createElement('div');
-  tab.className = 'tab' + (idx === 0 ? ' active' : '');
-  tab.textContent = year;
-  tab.dataset.year = year;
-  tab.addEventListener('click', () => {
-    if (currentYear === year) return;
+  tab.textContent   = y;
+  tab.className     = 'tab' + (i===0?' active':'');
+  tab.dataset.year  = y;
+  tab.onclick = () => {
+    if (currentYear===y) return;
     document.querySelector('.tab.active').classList.remove('active');
     tab.classList.add('active');
-    currentYear = year;
-    buildGallery(year);
-  });
-  tabsContainer.appendChild(tab);
+    currentYear = y;
+    buildGallery(y);
+  };
+  tabsContainer.append(tab);
 });
 
-
-/**
- * Builds the grid for a given year, only including images
- * that actually exist (others never get appended).
- */
+// build gallery via manifest
 async function buildGallery(year) {
   gallery.innerHTML = '';
   imageList = [];
-
-  // 1) Fetch the manifest for this year
   let files;
   try {
     const res = await fetch(`images/${year}/manifest.json`);
-    files = await res.json();                // e.g. ["2025-01-01.png", ...]
-  } catch (err) {
-    console.error('Could not load manifest for', year, err);
+    files = await res.json();
+  } catch {
+    console.error(`No manifest for ${year}`);
     return;
   }
 
-  // 2) For each entry, add to gallery
+  const startDate = new Date(year,0,1);
+  const totalDays = daysInYear(year);
+
   files.forEach((filename, idx) => {
-    const isoDate = filename.slice(0, 10);   // "YYYY-MM-DD"
-    const [yyyy, mm, dd] = isoDate.split('-');
-    const displayDate = `${dd}-${mm}-${yyyy}`;
+    // parse YYYY-MM-DD
+    const isoDate = filename.slice(0,10);
+    const [Y, M, D] = isoDate.split('-').map(Number);
+    const dDate = new Date(Y, M-1, D);
+    const dayOfYear = Math.floor((dDate - startDate)/(1000*60*60*24)) + 1;
+    const displayDate = `${String(D).padStart(2,'0')}-${String(M).padStart(2,'0')}-${Y}`;
     const src = `images/${year}/${filename}`;
-    const caption = CAPTIONS[isoDate] || '';
+    const cap = CAPTIONS[isoDate] || '';
 
-    // Track for lightbox
-    imageList.push({ src, displayDate, caption });
+    // track for lightbox
+    imageList.push({ src, displayDate, cap });
 
-    // Build DOM
+    // DOM
     const wrapper = document.createElement('div');
     wrapper.className = 'grid-item';
 
     const img = document.createElement('img');
     img.src           = src;
     img.alt           = displayDate;
-    img.title         = displayDate;
+    img.title         = `${dayOfYear} • ${displayDate}`;
     img.dataset.index = idx;
-    img.loading       = 'lazy';            // built‑in browser lazy‑load
-    img.decoding      = 'async';           // faster decode
+    img.loading       = 'lazy';
+    img.decoding      = 'async';
 
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
-    overlay.textContent = displayDate;
+    overlay.innerHTML = `<strong>${dayOfYear}</strong> &bull; ${displayDate}`;
 
     wrapper.append(img, overlay);
     gallery.append(wrapper);
   });
 }
 
-
-// Lightbox event handlers
-gallery.addEventListener('click', e => {
-  if (e.target.tagName !== 'IMG') return;
-  currentIndex = Number(e.target.dataset.index);
+// lightbox handlers
+gallery.onclick = e => {
+  if (e.target.tagName!=='IMG') return;
+  currentIndex = +e.target.dataset.index;
   showLightbox();
-});
-
-document.getElementById('closeBtn').onclick = () => {
-  lightbox.classList.add('hidden');
 };
-
-document.getElementById('prevBtn').onclick = () => {
+document.getElementById('closeBtn').onclick = () => lightbox.classList.add('hidden');
+document.getElementById('prevBtn').onclick  = () => {
   currentIndex = (currentIndex - 1 + imageList.length) % imageList.length;
   showLightbox();
 };
-
-document.getElementById('nextBtn').onclick = () => {
+document.getElementById('nextBtn').onclick  = () => {
   currentIndex = (currentIndex + 1) % imageList.length;
   showLightbox();
 };
 
 function showLightbox() {
-  const { src, displayDate, caption } = imageList[currentIndex];
-  lightboxImg.src           = src;
-  captionDate.textContent   = displayDate;
-  captionText.textContent   = caption;
+  const { src, displayDate, cap } = imageList[currentIndex];
+  lightboxImg.src         = src;
+  captionDate.textContent = displayDate;
+  captionText.textContent = cap;
   lightbox.classList.remove('hidden');
 }
-
-// Close lightbox on outside click
-lightbox.addEventListener('click', e => {
+lightbox.onclick = e => {
   if (e.target === lightbox) lightbox.classList.add('hidden');
-});
+};
 
-// Initialize first gallery
+// init
 buildGallery(currentYear);
