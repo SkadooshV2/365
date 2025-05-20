@@ -71,7 +71,7 @@ function buildGallery(year) {
     const dd   = String(d.getDate()).padStart(2, '0');
     const isoDate     = `${yyyy}-${mm}-${dd}`;
     const displayDate = `${dd}-${mm}-${yyyy}`;
-    const src         = `images/${year}/${isoDate}.HEIF`;
+    const src         = `images/${year}/${isoDate}.png`;
     const caption     = CAPTIONS[isoDate] || '';
 
     // prepare DOM
