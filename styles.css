@@ -127,14 +127,7 @@ header p {
   opacity: 1;
 }
 
-/* === Month Headings === 
-main h2 {
-  break-inside: avoid;
-  font-size: 1.25rem;
-  margin: var(--spacing) 0 calc(var(--spacing)/2);
-  color: var(--clr-accent);
-  text-align: center;
-} */
+
 
 /* === Lightbox === */
 .lightbox {
