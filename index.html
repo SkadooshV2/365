@@ -1,29 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Project 365</title>
+
+  <!-- Favicon placeholder -->
+  <link rel="icon" href="favicon.png" type="image/png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?
+    family=Inter:wght@400;600&family=Fira+Code&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header>
     <h1>Project 365</h1>
     <p>A photo taken every day of the year.</p>
+    <button id="toggleTheme" aria-label="Toggle dark/light mode">🌓</button>
   </header>
 
   <nav id="yearTabs" class="tabs"></nav>
   <main id="gallery" class="grid"></main>
 
-  <div id="lightbox" class="lightbox hidden">
-    <button class="close" id="closeBtn">&times;</button>
-    <button class="nav prev" id="prevBtn">&#10094;</button>
+  <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true">
+    <button class="close" id="closeBtn" aria-label="Close">&times;</button>
+    <button class="nav prev" id="prevBtn" aria-label="Previous">&#10094;</button>
     <img id="lightboxImg" src="" alt="">
     <div id="lightboxCaption">
       <div class="caption-date"></div>
       <div class="caption-text"></div>
     </div>
-    <button class="nav next" id="nextBtn">&#10095;</button>
+    <button class="nav next" id="nextBtn" aria-label="Next">&#10095;</button>
   </div>
 
   <script src="script.js"></script>

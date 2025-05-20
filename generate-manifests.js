@@ -1,7 +1,6 @@
 // generate-manifests.js
 const fs   = require('fs');
 const path = require('path');
-
 const IMAGES_ROOT = path.join(__dirname, 'images');
 
 fs.readdirSync(IMAGES_ROOT, { withFileTypes: true })
