@@ -60,33 +60,26 @@ async function buildGallery(year) {
     return;
   }
 
-  const startDate = new Date(year,0,1);
-  let lastMonth = null;
+  const startDate = new Date(year, 0, 1);
 
   files.forEach((filename, idx) => {
     // parse "DD-MM-YYYY-Caption-parts.png"
-    const name = filename.slice(0, -4);
-    const parts = name.split('-');
-    const DD = parts[0], MM = parts[1], YYYY = parts[2];
-    const caption = parts.slice(3).join(' ').replace(/_/g,' ');
+    const name    = filename.slice(0, -4);
+    const parts   = name.split('-');
+    const DD      = parts[0], MM = parts[1], YYYY = parts[2];
+    const caption = parts.slice(3).join(' ').replace(/_/g, ' ');
     const displayDate = `${DD}-${MM}-${YYYY}`;
 
-    // month heading
-    if (MM !== lastMonth) {
-      const monthName = new Date(YYYY, +MM-1)
-        .toLocaleString('default',{month:'long'});
-      const h2 = document.createElement('h2');
-      h2.textContent = monthName;
-      gallery.append(h2);
-      lastMonth = MM;
-    }
-
     // compute day-of-year
-    const dDate = new Date(+YYYY, +MM-1, +DD);
-    const dayOfYear = Math.floor((dDate - startDate)/(1000*60*60*24)) + 1;
+    const dDate    = new Date(+YYYY, +MM - 1, +DD);
+    const dayOfYear = Math.floor((dDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
     // track for lightbox
-    imageList.push({ src:`images/${year}/${filename}`, displayDate, caption });
+    imageList.push({
+      src:     `images/${year}/${filename}`,
+      displayDate,
+      caption
+    });
 
     // build thumbnail
     const wrapper = document.createElement('div');
