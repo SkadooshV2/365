@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>365 Days of Photos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>365 Days of Photos</h1>
+    <p>A photo taken every day of the year.</p>
+  </header>
+
+  <!-- Year Tabs -->
+  <nav id="yearTabs" class="tabs"></nav>
+
+  <main id="gallery" class="grid"></main>
+
+  <!-- Modal / Lightbox -->
+  <div id="lightbox" class="lightbox hidden">
+    <button class="close" id="closeBtn">&times;</button>
+    <button class="nav prev" id="prevBtn">&#10094;</button>
+    <img id="lightboxImg" src="" alt="">
+    <div id="lightboxCaption">
+      <div class="caption-date"></div>
+      <div class="caption-text"></div>
+    </div>
+    <button class="nav next" id="nextBtn">&#10095;</button>
+  </div>
+
+  <footer>
+    <p>© 2025 Your Name</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
