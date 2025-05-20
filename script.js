@@ -4,14 +4,11 @@
 const YEARS     = [2023, 2024, 2025];
 
 // 2) Map "YYYY-MM-DD" → "Your custom caption".  
-//    If a date is missing here, it will just show an empty caption.
 const CAPTIONS = {
   "2025-01-01": "New Year's sunrise over the dunes",
   "2025-02-14": "Valentine's heart in sand",
   // … add more as you like
 };
-
-const TOTAL_DAYS  = 365;  // 366 for leap years
 
 // --- DOM refs ---
 const tabsContainer = document.getElementById('yearTabs');
@@ -26,6 +23,16 @@ let currentYear = YEARS[0];
 let currentIndex= 0;
 
 
+/**
+ * Returns 365 or 366 depending on whether `year` is a leap year.
+ */
+function daysInYear(year) {
+  const start = new Date(year, 0, 1);
+  const end   = new Date(year + 1, 0, 1);
+  return Math.round((end - start) / (1000 * 60 * 60 * 24));
+}
+
+
 // Build year‐tabs
 YEARS.forEach((year, idx) => {
   const tab = document.createElement('div');
@@ -33,7 +40,7 @@ YEARS.forEach((year, idx) => {
   tab.textContent = year;
   tab.dataset.year = year;
   tab.addEventListener('click', () => {
-    if (currentYear == year) return;
+    if (currentYear === year) return;
     document.querySelector('.tab.active').classList.remove('active');
     tab.classList.add('active');
     currentYear = year;
@@ -43,44 +50,65 @@ YEARS.forEach((year, idx) => {
 });
 
 
-// Build the grid for a given year
+/**
+ * Builds the grid for a given year, only including images
+ * that actually exist (others never get appended).
+ */
 function buildGallery(year) {
   gallery.innerHTML = '';
   imageList = [];
+
+  const totalDays = daysInYear(year);
   const startDate = new Date(year, 0, 1);
 
-  for (let i = 0; i < TOTAL_DAYS; i++) {
-    const d = new Date(startDate);
+  for (let i = 0; i < totalDays; i++) {
+    const d    = new Date(startDate);
     d.setDate(startDate.getDate() + i);
 
+    // iso for lookup & src
     const yyyy = d.getFullYear();
-    const mm   = String(d.getMonth()+1).padStart(2,'0');
-    const dd   = String(d.getDate()).padStart(2,'0');
-    const date = `${yyyy}-${mm}-${dd}`;
-    const src  = `images/${year}/${date}.jpg`;
-    const txt  = CAPTIONS[date] || '';
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const dd   = String(d.getDate()).padStart(2, '0');
+    const isoDate     = `${yyyy}-${mm}-${dd}`;
+    const displayDate = `${dd}-${mm}-${yyyy}`;
+    const src         = `images/${year}/${isoDate}.jpg`;
+    const caption     = CAPTIONS[isoDate] || '';
 
-    // keep track for lightbox
-    imageList.push({ src, date, caption: txt });
-
-    // create DOM
+    // prepare DOM
     const wrapper = document.createElement('div');
     wrapper.className = 'grid-item';
 
-    const img = document.createElement('img');
-    img.src       = src;
-    img.alt       = txt ? `${date}: ${txt}` : date;
-    img.title     = date;            // native tooltip
-    img.dataset.index = i;
+    const img = new Image();
+    img.dataset.isoDate = isoDate;
+    img.title           = displayDate;  // tooltip
+    img.dataset.caption = caption;
 
-    // hover-overlay
+    // overlay for hover
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
-    overlay.textContent = date;
+    overlay.textContent = displayDate;
 
-    wrapper.appendChild(img);
-    wrapper.appendChild(overlay);
-    gallery.appendChild(wrapper);
+    // only append on successful load
+    img.onload = () => {
+      // record in imageList
+      imageList.push({
+        src,
+        displayDate,
+        caption
+      });
+      const idx = imageList.length - 1;
+      img.dataset.index = idx;
+
+      // finalize wrapper
+      wrapper.append(img, overlay);
+      gallery.append(wrapper);
+    };
+
+    // silently skip if missing
+    img.onerror = () => {};
+
+    // start load
+    img.src = src;
   }
 }
 
@@ -107,17 +135,17 @@ document.getElementById('nextBtn').onclick = () => {
 };
 
 function showLightbox() {
-  const { src, date, caption } = imageList[currentIndex];
-  lightboxImg.src = src;
-  captionDate.textContent = date;
-  captionText.textContent = caption;
+  const { src, displayDate, caption } = imageList[currentIndex];
+  lightboxImg.src           = src;
+  captionDate.textContent   = displayDate;
+  captionText.textContent   = caption;
   lightbox.classList.remove('hidden');
 }
 
-// close when clicking outside the image
+// Close lightbox on outside click
 lightbox.addEventListener('click', e => {
   if (e.target === lightbox) lightbox.classList.add('hidden');
 });
 
-// Initialize
+// Initialize first gallery
 buildGallery(currentYear);
