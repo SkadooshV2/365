@@ -54,62 +54,50 @@ YEARS.forEach((year, idx) => {
  * Builds the grid for a given year, only including images
  * that actually exist (others never get appended).
  */
-function buildGallery(year) {
+async function buildGallery(year) {
   gallery.innerHTML = '';
   imageList = [];
 
-  const totalDays = daysInYear(year);
-  const startDate = new Date(year, 0, 1);
+  // 1) Fetch the manifest for this year
+  let files;
+  try {
+    const res = await fetch(`images/${year}/manifest.json`);
+    files = await res.json();                // e.g. ["2025-01-01.png", ...]
+  } catch (err) {
+    console.error('Could not load manifest for', year, err);
+    return;
+  }
 
-  for (let i = 0; i < totalDays; i++) {
-    const d    = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
-
-    // iso for lookup & src
-    const yyyy = d.getFullYear();
-    const mm   = String(d.getMonth() + 1).padStart(2, '0');
-    const dd   = String(d.getDate()).padStart(2, '0');
-    const isoDate     = `${yyyy}-${mm}-${dd}`;
+  // 2) For each entry, add to gallery
+  files.forEach((filename, idx) => {
+    const isoDate = filename.slice(0, 10);   // "YYYY-MM-DD"
+    const [yyyy, mm, dd] = isoDate.split('-');
     const displayDate = `${dd}-${mm}-${yyyy}`;
-    const src         = `images/${year}/${isoDate}.png`;
-    const caption     = CAPTIONS[isoDate] || '';
+    const src = `images/${year}/${filename}`;
+    const caption = CAPTIONS[isoDate] || '';
 
-    // prepare DOM
+    // Track for lightbox
+    imageList.push({ src, displayDate, caption });
+
+    // Build DOM
     const wrapper = document.createElement('div');
     wrapper.className = 'grid-item';
 
-    const img = new Image();
-    img.dataset.isoDate = isoDate;
-    img.title           = displayDate;  // tooltip
-    img.dataset.caption = caption;
+    const img = document.createElement('img');
+    img.src           = src;
+    img.alt           = displayDate;
+    img.title         = displayDate;
+    img.dataset.index = idx;
+    img.loading       = 'lazy';            // built‑in browser lazy‑load
+    img.decoding      = 'async';           // faster decode
 
-    // overlay for hover
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
     overlay.textContent = displayDate;
 
-    // only append on successful load
-    img.onload = () => {
-      // record in imageList
-      imageList.push({
-        src,
-        displayDate,
-        caption
-      });
-      const idx = imageList.length - 1;
-      img.dataset.index = idx;
-
-      // finalize wrapper
-      wrapper.append(img, overlay);
-      gallery.append(wrapper);
-    };
-
-    // silently skip if missing
-    img.onerror = () => {};
-
-    // start load
-    img.src = src;
-  }
+    wrapper.append(img, overlay);
+    gallery.append(wrapper);
+  });
 }
 
 
