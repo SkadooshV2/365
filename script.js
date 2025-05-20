@@ -1,8 +1,7 @@
-// CONFIGURATION
-const YEARS     = [2023, 2024, 2025];
-const CAPTIONS  = { /* "YYYY-MM-DD": "Your caption" */ };
+// ==== CONFIGURATION ====
+const YEARS       = [2023, 2024, 2025];   // your year tabs
 
-// DOM
+// ==== DOM REFS ====
 const tabsContainer = document.getElementById('yearTabs');
 const gallery       = document.getElementById('gallery');
 const lightbox      = document.getElementById('lightbox');
@@ -41,6 +40,8 @@ YEARS.forEach((y,i) => {
 async function buildGallery(year) {
   gallery.innerHTML = '';
   imageList = [];
+
+  // load the manifest
   let files;
   try {
     const res = await fetch(`images/${year}/manifest.json`);
@@ -51,27 +52,34 @@ async function buildGallery(year) {
   }
 
   const startDate = new Date(year,0,1);
-  const totalDays = daysInYear(year);
 
   files.forEach((filename, idx) => {
-    // parse YYYY-MM-DD
-    const isoDate = filename.slice(0,10);
-    const [Y, M, D] = isoDate.split('-').map(Number);
-    const dDate = new Date(Y, M-1, D);
+    // remove extension, split filename:
+    // "DD-MM-YYYY-My-caption-here"
+    const name = filename.slice(0, -4);
+    const parts = name.split('-');
+    const DD = parts[0], MM = parts[1], YYYY = parts[2];
+    const captionWords = parts.slice(3);
+    const caption = captionWords.join(' ').replace(/_/g,' ');
+    const displayDate = `${DD}-${MM}-${YYYY}`;
+
+    // compute day-of-year
+    const dDate = new Date(+YYYY, +MM-1, +DD);
     const dayOfYear = Math.floor((dDate - startDate)/(1000*60*60*24)) + 1;
-    const displayDate = `${String(D).padStart(2,'0')}-${String(M).padStart(2,'0')}-${Y}`;
-    const src = `images/${year}/${filename}`;
-    const cap = CAPTIONS[isoDate] || '';
 
     // track for lightbox
-    imageList.push({ src, displayDate, cap });
+    imageList.push({
+      src: `images/${year}/${filename}`,
+      displayDate,
+      caption
+    });
 
-    // DOM
+    // build DOM
     const wrapper = document.createElement('div');
     wrapper.className = 'grid-item';
 
     const img = document.createElement('img');
-    img.src           = src;
+    img.src           = `images/${year}/${filename}`;
     img.alt           = displayDate;
     img.title         = `${dayOfYear} • ${displayDate}`;
     img.dataset.index = idx;
@@ -80,6 +88,7 @@ async function buildGallery(year) {
 
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
+    // bold day-of-year, dot, then date
     overlay.innerHTML = `<strong>${dayOfYear}</strong> &bull; ${displayDate}`;
 
     wrapper.append(img, overlay);
@@ -87,7 +96,7 @@ async function buildGallery(year) {
   });
 }
 
-// lightbox handlers
+// Lightbox controls
 gallery.onclick = e => {
   if (e.target.tagName!=='IMG') return;
   currentIndex = +e.target.dataset.index;
@@ -102,17 +111,16 @@ document.getElementById('nextBtn').onclick  = () => {
   currentIndex = (currentIndex + 1) % imageList.length;
   showLightbox();
 };
-
 function showLightbox() {
-  const { src, displayDate, cap } = imageList[currentIndex];
+  const { src, displayDate, caption } = imageList[currentIndex];
   lightboxImg.src         = src;
   captionDate.textContent = displayDate;
-  captionText.textContent = cap;
+  captionText.textContent = caption;
   lightbox.classList.remove('hidden');
 }
 lightbox.onclick = e => {
   if (e.target === lightbox) lightbox.classList.add('hidden');
 };
 
-// init
+// initialize
 buildGallery(currentYear);
