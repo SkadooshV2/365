@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Project 365</title>
-
-  <!-- Favicon placeholder -->
-  <link rel="icon" href="favicon.png" type="image/png">
+  <title>Project 365</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -18,12 +15,18 @@
 </head>
 <body>
   <header>
-    <h1>Project 365</h1>
+    <h1>Project 365</h1>
     <p>A photo taken every day of the year.</p>
     <button id="toggleTheme" aria-label="Toggle dark/light mode">🌓</button>
   </header>
 
   <nav id="yearTabs" class="tabs"></nav>
+
+  <!-- per‑year description only -->
+  <section id="yearInfo" class="year-info">
+    <p id="yearDescription" class="year-description"></p>
+  </section>
+
   <main id="gallery" class="grid"></main>
 
   <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true">
