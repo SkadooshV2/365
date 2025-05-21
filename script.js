@@ -3,7 +3,7 @@ const YEARS = [2023, 2024, 2025];
 const YEAR_DESCRIPTIONS = {
   2023: "In 2023 I began Project 365, capturing moments close to home.",
   2024: "In 2024 I took my lens farther afield—nature, travel, and new horizons.",
-  2025: "This year I'm refining style: composition, light, and mindful framing."
+  2025: "This year I’m refining style: composition, light, and mindful framing."
 };
 
 // === DOM REFS ===
@@ -20,10 +20,19 @@ let imageList   = [];
 let currentYear = YEARS[0];
 let currentIndex= 0;
 
-// Log page load time
+// Log page load time using Navigation Timing Level 2 (falls back if unavailable)
 window.addEventListener('load', () => {
-  const t = performance.timing;
-  console.log(`Page loaded in ${t.loadEventEnd - t.navigationStart} ms`);
+  let loadTime;
+  const navEntries = performance.getEntriesByType('navigation');
+  if (navEntries && navEntries.length > 0) {
+    // duration = loadEventEnd - startTime (startTime === 0)
+    loadTime = Math.round(navEntries[0].duration);
+  } else {
+    // fallback to older API
+    const t = performance.timing;
+    loadTime = t.loadEventEnd - t.navigationStart;
+  }
+  console.log(`Page loaded in ${loadTime} ms`);
 });
 
 // Dark mode toggle & persistence
